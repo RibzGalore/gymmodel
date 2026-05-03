@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markham Gym — Business Forecast Model</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --bg2: #17171b;
+    --bg3: #1f1f25;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f0f2;
+    --text2: #9a9aaa;
+    --text3: #5a5a6a;
+    --accent: #e8ff47;
+    --accent2: #b8cc2a;
+    --green: #4ade80;
+    --green-bg: rgba(74,222,128,0.1);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.1);
+    --amber: #fbbf24;
+    --amber-bg: rgba(251,191,36,0.1);
+    --blue: #60a5fa;
+    --blue-bg: rgba(96,165,250,0.1);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  /* ── Header ── */
+  .site-header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 14px; color: #0e0e10;
+  }
+  .logo-text { font-size: 15px; font-weight: 500; letter-spacing: -0.02em; }
+  .logo-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .header-badge {
+    background: var(--green-bg);
+    border: 1px solid rgba(74,222,128,0.25);
+    color: var(--green);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex;
+    min-height: calc(100vh - 73px);
+  }
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    position: sticky;
+    top: 73px;
+    height: calc(100vh - 73px);
+    overflow-y: auto;
+  }
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    margin-bottom: 8px;
+    padding: 0 8px;
+    text-transform: uppercase;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 13.5px;
+    font-weight: 400;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--accent); color: #0e0e10; font-weight: 500; }
+  .nav-item .icon { font-size: 14px; flex-shrink: 0; }
+
+  .main {
+    flex: 1;
+    padding: 32px 40px;
+    min-width: 0;
+    max-width: 960px;
+  }
+
+  /* ── Tabs ── */
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  /* ── Page title ── */
+  .page-title {
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    margin-bottom: 4px;
+  }
+  .page-sub {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 28px;
+  }
+
+  /* ── Metric grid ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .metric {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .metric .mlabel {
+    font-size: 11px;
+    color: var(--text3);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .metric .mvalue {
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .metric .msub {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 5px;
+  }
+  .mvalue.pos { color: var(--green); }
+  .mvalue.neg { color: var(--red); }
+  .mvalue.acc { color: var(--accent); }
+
+  /* ── Card ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    letter-spacing: 0.02em;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Table ── */
+  .tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  .tbl th {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .tbl td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl .num { text-align: right; font-family: 'DM Mono', monospace; font-size: 13px; }
+  .tbl .total td { font-weight: 500; background: var(--bg3); }
+  .tbl .dim { color: var(--text2); }
+
+  /* ── Badge ── */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-green { background: var(--green-bg); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+  .badge-red { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(251,191,36,0.2); }
+  .badge-blue { background: var(--blue-bg); color: var(--blue); border: 1px solid rgba(96,165,250,0.2); }
+  .badge-acc { background: rgba(232,255,71,0.12); color: var(--accent); border: 1px solid rgba(232,255,71,0.25); }
+
+  /* ── Change cards ── */
+  .change-card {
+    border-left: 3px solid;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+  .ch-save { border-color: var(--green); background: var(--green-bg); }
+  .ch-add  { border-color: var(--blue); background: var(--blue-bg); }
+  .ch-warn { border-color: var(--amber); background: var(--amber-bg); }
+  .change-card .ch { font-size: 13.5px; font-weight: 500; margin-bottom: 3px; }
+  .change-card .cd { font-size: 12.5px; color: var(--text2); }
+
+  /* ── Section label ── */
+  .slabel {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin: 24px 0 12px;
+  }
+
+  /* ── Break-even ── */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .slider-row label {
+    font-size: 13px;
+    color: var(--text2);
+    min-width: 220px;
+    flex-shrink: 0;
+  }
+  .slider-row input[type=range] {
+    flex: 1;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .slider-val {
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Mono', monospace;
+    min-width: 90px;
+    text-align: right;
+    color: var(--accent);
+  }
+  .be-result {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 28px;
+    text-align: center;
+    margin: 20px 0;
+  }
+  .be-big {
+    font-size: 72px;
+    font-weight: 500;
+    letter-spacing: -0.05em;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .be-lbl { font-size: 13px; color: var(--text2); margin-top: 8px; }
+  .be-detail { font-size: 13px; margin-top: 16px; color: var(--text); }
+
+  /* ── Floor plan ── */
+  .fp-grid {
+    display: grid;
+    gap: 2px;
+    margin-bottom: 20px;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .fp-cell {
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 7.5px;
+    font-weight: 500;
+    text-align: center;
+    letter-spacing: 0.03em;
+  }
+  .legend-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .legend-dot {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* ── Grid layouts ── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 700px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* ── Chart wrapper ── */
+  .chart-wrap { position: relative; width: 100%; height: 280px; margin-bottom: 20px; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── Netlify deploy section ── */
+  .deploy-box {
+    background: var(--bg3);
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .deploy-step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .step-num {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #0e0e10;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-text { font-size: 13.5px; }
+  .step-text strong { color: var(--text); font-weight: 500; }
+  .step-text p { color: var(--text2); font-size: 12.5px; margin-top: 2px; }
+  code {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { padding: 20px 16px; }
+    .site-header { padding: 14px 16px; }
+    .mobile-nav { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 20px; }
+    .mobile-nav button {
+      padding: 7px 12px; font-size: 12px; border-radius: var(--radius-sm);
+      background: var(--bg2); border: 1px solid var(--border); color: var(--text2); cursor: pointer;
+    }
+    .mobile-nav button.active { background: var(--accent); color: #0e0e10; border-color: var(--accent); }
+    .be-big { font-size: 52px; }
+  }
+  @media (min-width: 769px) { .mobile-nav { display: none; } }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-mark">G</div>
+    <div>
+      <div class="logo-text">Markham Gym Co.</div>
+      <div class="logo-sub">Business Forecast Model — 24/7 Self-Serve</div>
+    </div>
+  </div>
+  <div class="header-badge">Partnership Draft v1.0</div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-label">Model</div>
+    <button class="nav-item active" onclick="showTab('overview',this)"><span class="icon">◈</span> Overview</button>
+    <button class="nav-item" onclick="showTab('model247',this)"><span class="icon">◷</span> 24/7 Changes</button>
+    <button class="nav-item" onclick="showTab('equipment',this)"><span class="icon">⊟</span> Equipment</button>
+    <button class="nav-item" onclick="showTab('pnl',this)"><span class="icon">↗</span> P&L Forecast</button>
+    <button class="nav-item" onclick="showTab('breakeven',this)"><span class="icon">⊜</span> Break-Even</button>
+    <button class="nav-item" onclick="showTab('floorplan',this)"><span class="icon">⊞</span> Floor Plan</button>
+    <div class="sidebar-label" style="margin-top:24px">Partnership</div>
+    <button class="nav-item" onclick="showTab('partners',this)"><span class="icon">◎</span> Structure</button>
+    <button class="nav-item" onclick="showTab('deploy',this)"><span class="icon">⇪</span> Deploy Guide</button>
+  </nav>
+
+  <main class="main">
+    <!-- Mobile nav -->
+    <div class="mobile-nav">
+      <button class="active" onclick="showTab('overview',this)">Overview</button>
+      <button onclick="showTab('model247',this)">24/7</button>
+      <button onclick="showTab('equipment',this)">Equipment</button>
+      <button onclick="showTab('pnl',this)">P&L</button>
+      <button onclick="showTab('breakeven',this)">Break-Even</button>
+      <button onclick="showTab('floorplan',this)">Floor Plan</button>
+      <button onclick="showTab('partners',this)">Partners</button>
+      <button onclick="showTab('deploy',this)">Deploy</button>
+    </div>
+
+    <!-- ═══════ OVERVIEW ═══════ -->
+    <div id="overview" class="tab active">
+      <div class="page-title">Boutique gym — Markham, ON</div>
+      <div class="page-sub">24/7 self-serve model · 7,000 sq ft · 4–5 partner structure · Food & smoothie bar</div>
+
+      <div class="metrics">
+        <div class="metric"><div class="mlabel">Startup capital</div><div class="mvalue acc">$420k</div><div class="msub">5-way = $84k/partner</div></div>
+        <div class="metric"><div class="mlabel">Monthly fixed costs</div><div class="mvalue">$32,100</div><div class="msub">24/7 self-serve ops</div></div>
+        <div class="metric"><div class="mlabel">Break-even members</div><div class="mvalue acc">~210</div><div class="msub">@ $89.99/month</div></div>
+        <div class="metric"><div class="mlabel">Membership cap</div><div class="mvalue">500</div><div class="msub">24/7 spreads traffic</div></div>
+        <div class="metric"><div class="mlabel">Equipment savings</div><div class="mvalue pos">$88k</div><div class="msub">vs North American brands</div></div>
+        <div class="metric"><div class="mlabel">Year 3 EBITDA</div><div class="mvalue pos">$198k</div><div class="msub">at ~450 members</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Concept summary</div>
+        <table class="tbl">
+          <tr><td class="dim" style="width:35%">Model</td><td>Boutique private gym — 24/7 biometric access, capped membership, community-focused</td></tr>
+          <tr><td class="dim">Space</td><td>7,000 sq ft — gym floor, PT studios (×3), food bar, changerooms, lobby</td></tr>
+          <tr><td class="dim">Location</td><td>Markham — industrial/commercial park (Esna Park corridor or Hwy 7)</td></tr>
+          <tr><td class="dim">Reference</td><td>Fitness Element Markham — 5,000 sqft boutique at $79.99/month since 2019</td></tr>
+          <tr><td class="dim">Membership fee</td><td>$89.99/month + HST &nbsp;<span class="badge badge-blue">Boutique premium positioning</span></td></tr>
+          <tr><td class="dim">Staffing</td><td>1 part-time GM (daytime) + cleaning contract — no overnight staff required</td></tr>
+          <tr><td class="dim">Food bar</td><td>Staffed daytime · Smart fridge + vending machines off-hours</td></tr>
+          <tr><td class="dim">PT studios</td><td>3 private rooms — trainer partner (founder) priority + 2 external PT renters</td></tr>
+          <tr><td class="dim">Equipment</td><td>Mix of China imports (~60%) and select North American brands (~40%)</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Startup capital breakdown</div>
+        <table class="tbl">
+          <tr><th>Category</th><th class="num">Amount</th><th>Notes</th></tr>
+          <tr><td>Leasehold improvements</td><td class="num">$170,000</td><td class="dim">Flooring, mirrors, HVAC, plumbing for food bar</td></tr>
+          <tr><td>Gym equipment (China + select NA)</td><td class="num">$67,000</td><td class="dim">See Equipment tab</td></tr>
+          <tr><td>Food bar fit-out + smart fridge</td><td class="num">$40,000</td><td class="dim">Kitchen + vending/smart fridge off-hours</td></tr>
+          <tr><td>Access control + security tech</td><td class="num">$18,000</td><td class="dim">Biometric entry, cameras, smart lockers, app</td></tr>
+          <tr><td>Signage, branding + launch marketing</td><td class="num">$12,000</td><td class="dim">Exterior, social, pre-sell campaign</td></tr>
+          <tr><td>Furniture + fixtures</td><td class="num">$10,000</td><td class="dim">Reception, lounge, changeroom millwork</td></tr>
+          <tr><td>Legal + incorporation</td><td class="num">$4,000</td><td class="dim">Partnership agreement, lease review, HST reg</td></tr>
+          <tr><td>Licenses + permits</td><td class="num">$2,000</td><td class="dim">Business license, food handler, health inspection</td></tr>
+          <tr><td>First + last month rent</td><td class="num">$26,800</td><td class="dim">$13,400 × 2</td></tr>
+          <tr><td>Working capital reserve</td><td class="num">$70,000</td><td class="dim" style="color:var(--amber)">6 months buffer — do not skip this</td></tr>
+          <tr class="total"><td>Total</td><td class="num">$419,800</td><td></td></tr>
+          <tr class="total"><td>Per partner (÷ 5)</td><td class="num">$83,960</td><td></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════ 24/7 CHANGES ═══════ -->
+    <div id="model247" class="tab">
+      <div class="page-title">24/7 self-serve model</div>
+      <div class="page-sub">How operating 24/7 with limited staffing changes the economics vs. a traditional gym</div>
+
+      <div class="grid2">
+        <div class="metric"><div class="mlabel">Monthly staffing saving</div><div class="mvalue pos">$11,000</div><div class="msub">vs traditional staffed gym</div></div>
+        <div class="metric"><div class="mlabel">Break-even improvement</div><div class="mvalue pos">−55 members</div><div class="msub">265 → 210 to break even</div></div>
+      </div>
+
+      <div class="slabel">Cost savings</div>
+      <div class="change-card ch-save">
+        <div class="ch">Staffing reduction — saves ~$130,000/year</div>
+        <div class="cd">No overnight front desk. No evening manager. Contract cleaning replaces in-house staff. Drops from ~4 FT roles to 1 part-time GM + 1 part-time food bar + cleaning contract.</div>
+      </div>
+      <div class="change-card ch-save">
+        <div class="ch">Higher membership cap — 500 vs 350</div>
+        <div class="cd">24/7 spreads peak traffic across all hours. Off-peak 11pm–6am absorbs members who can't make it during rush. Every member above break-even is nearly pure margin.</div>
+      </div>
+      <div class="change-card ch-save">
+        <div class="ch">Faster path to profitability</div>
+        <div class="cd">Lower fixed costs mean you need fewer members to turn profitable. Critical in months 6–12 when cash reserve is being drawn down.</div>
+      </div>
+
+      <div class="slabel">Additional costs</div>
+      <div class="change-card ch-add">
+        <div class="ch">Access control + security tech — $18,000 setup + $900/month</div>
+        <div class="cd">Biometric or keycard entry ($8k), camera system ($4k), smart lockers ($3k), member app + booking software ($3k setup). Monthly SaaS: ~$400–600/mo.</div>
+      </div>
+      <div class="change-card ch-add">
+        <div class="ch">Higher utilities — +$6,000–8,000/year</div>
+        <div class="cd">HVAC, lighting, and security running 24/7. Partially offset by smart thermostats and programmable HVAC zones during off-peak hours (2am–5am).</div>
+      </div>
+      <div class="change-card ch-add">
+        <div class="ch">Higher insurance premium — +$2,000–3,000/year</div>
+        <div class="cd">Unattended facility requires enhanced liability coverage. Some Ontario insurers require minimum camera coverage ratios and documented emergency response protocols.</div>
+      </div>
+      <div class="change-card ch-add">
+        <div class="ch">Smart fridge + vending — $12,000 setup</div>
+        <div class="cd">Tap-to-pay smart fridges for pre-packaged meals and drinks. Protein shake vending. Generates revenue in off-hours without kitchen staff.</div>
+      </div>
+
+      <div class="slabel">Operational requirements</div>
+      <div class="change-card ch-warn">
+        <div class="ch">Member vetting is non-negotiable</div>
+        <div class="cd">Boutique cap + 24/7 access = every member must complete ID verification, digital waivers, and an onboarding orientation session before solo access is granted. Consider a 2-week supervised trial period.</div>
+      </div>
+      <div class="change-card ch-warn">
+        <div class="ch">Ontario emergency protocol requirement</div>
+        <div class="cd">Unmanned facilities under Ontario OHSA require posted emergency procedures, accessible AED, and a defined response protocol. Work with your insurer and a lawyer on this before opening day.</div>
+      </div>
+      <div class="change-card ch-warn">
+        <div class="ch">Food bar is daytime-only for cooked meals</div>
+        <div class="cd">Ontario health code requires staff supervision for prepared food service. After-hours revenue comes from smart fridges (pre-packaged meals) and vending only.</div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <div class="card-title">Traditional vs 24/7 self-serve comparison</div>
+        <table class="tbl">
+          <tr><th>Line item</th><th class="num">Traditional</th><th class="num">24/7 self-serve</th><th class="num">Delta</th></tr>
+          <tr><td>Monthly staffing</td><td class="num">$17,500</td><td class="num">$6,500</td><td class="num" style="color:var(--green)">−$11,000</td></tr>
+          <tr><td>Monthly utilities</td><td class="num">$1,833</td><td class="num">$2,500</td><td class="num" style="color:var(--red)">+$667</td></tr>
+          <tr><td>Monthly insurance</td><td class="num">$1,250</td><td class="num">$1,500</td><td class="num" style="color:var(--red)">+$250</td></tr>
+          <tr><td>Technology / software</td><td class="num">$500</td><td class="num">$900</td><td class="num" style="color:var(--red)">+$400</td></tr>
+          <tr><td>Membership cap</td><td class="num">350</td><td class="num">500</td><td class="num" style="color:var(--green)">+150</td></tr>
+          <tr><td>Break-even members</td><td class="num">~265</td><td class="num">~210</td><td class="num" style="color:var(--green)">−55</td></tr>
+          <tr class="total"><td>Net monthly fixed cost delta</td><td class="num"></td><td class="num"></td><td class="num" style="color:var(--green)">−$10,333/mo</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════ EQUIPMENT ═══════ -->
+    <div id="equipment" class="tab">
+      <div class="page-title">Equipment — China import strategy</div>
+      <div class="page-sub">Importing from Chinese manufacturers cuts equipment costs 45–55%. Lead time: 8–14 weeks including freight.</div>
+
+      <div class="metrics">
+        <div class="metric"><div class="mlabel">North American cost</div><div class="mvalue">$155k</div></div>
+        <div class="metric"><div class="mlabel">China import estimate</div><div class="mvalue acc">$67k</div></div>
+        <div class="metric"><div class="mlabel">Total saving</div><div class="mvalue pos">$88k</div></div>
+        <div class="metric"><div class="mlabel">Freight + duties est.</div><div class="mvalue">$8–10k</div><div class="msub">Factor into landed cost</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Gym floor equipment — NA vs China</div>
+        <table class="tbl">
+          <tr><th>Item</th><th class="num">Qty</th><th class="num">NA price</th><th class="num">China price</th><th class="num">Saving</th></tr>
+          <tr><td>Commercial treadmill</td><td class="num">8</td><td class="num">$52,000</td><td class="num">$20,000</td><td class="num" style="color:var(--green)">$32,000</td></tr>
+          <tr><td>Upright bike</td><td class="num">4</td><td class="num">$12,000</td><td class="num">$4,800</td><td class="num" style="color:var(--green)">$7,200</td></tr>
+          <tr><td>Rowing machine</td><td class="num">4</td><td class="num">$6,000</td><td class="num">$2,800</td><td class="num" style="color:var(--green)">$3,200</td></tr>
+          <tr><td>Elliptical</td><td class="num">4</td><td class="num">$16,000</td><td class="num">$6,400</td><td class="num" style="color:var(--green)">$9,600</td></tr>
+          <tr><td>Stairmaster</td><td class="num">2</td><td class="num">$11,000</td><td class="num">$5,000</td><td class="num" style="color:var(--green)">$6,000</td></tr>
+          <tr><td>Power rack / squat cage</td><td class="num">6</td><td class="num">$13,200</td><td class="num">$4,800</td><td class="num" style="color:var(--green)">$8,400</td></tr>
+          <tr><td>Barbell + plate sets</td><td class="num">6</td><td class="num">$7,200</td><td class="num">$2,700</td><td class="num" style="color:var(--green)">$4,500</td></tr>
+          <tr><td>Dumbbell set (5–100 lb)</td><td class="num">1</td><td class="num">$12,000</td><td class="num">$5,500</td><td class="num" style="color:var(--green)">$6,500</td></tr>
+          <tr><td>Dual cable machines</td><td class="num">4</td><td class="num">$18,000</td><td class="num">$7,200</td><td class="num" style="color:var(--green)">$10,800</td></tr>
+          <tr><td>Leg press + hack squat</td><td class="num">3</td><td class="num">$17,500</td><td class="num">$7,000</td><td class="num" style="color:var(--green)">$10,500</td></tr>
+          <tr><td>Selectorized machines (5 units)</td><td class="num">1</td><td class="num">$17,500</td><td class="num">$8,000</td><td class="num" style="color:var(--green)">$9,500</td></tr>
+          <tr><td>Rubber flooring + mirrors</td><td class="num">1</td><td class="num">$26,000</td><td class="num">$18,000</td><td class="num" style="color:var(--green)">$8,000</td></tr>
+          <tr><td>Misc (KBs, ropes, benches, AV)</td><td class="num">1</td><td class="num">$12,000</td><td class="num">$7,500</td><td class="num" style="color:var(--green)">$4,500</td></tr>
+          <tr class="total"><td>Total</td><td></td><td class="num">$220,400</td><td class="num">$99,700</td><td class="num" style="color:var(--green)">$120,700</td></tr>
+        </table>
+        <p style="font-size:12px;color:var(--text3);margin-top:12px">Model uses $67k — some budget preserved for selective NA brands on high-wear cardio and Concept2 rowers.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">What to import vs. buy local</div>
+        <table class="tbl">
+          <tr><th>Item</th><th>Recommendation</th><th>Reason</th></tr>
+          <tr><td>Power racks</td><td><span class="badge badge-green">Import</span></td><td class="dim">Chinese racks (Lzx, REP-equivalent) are structurally solid and well tested</td></tr>
+          <tr><td>Barbells + plates</td><td><span class="badge badge-green">Import</span></td><td class="dim">Weight is weight — no functional difference</td></tr>
+          <tr><td>Dumbbells</td><td><span class="badge badge-green">Import</span></td><td class="dim">Hex rubber dumbbells from China are industry standard worldwide</td></tr>
+          <tr><td>Cable / selectorized machines</td><td><span class="badge badge-green">Import</span></td><td class="dim">Chinese manufacturers (BFT, Vesta) match commercial quality</td></tr>
+          <tr><td>Spin bikes + rowers</td><td><span class="badge badge-green">Import</span></td><td class="dim">Equivalent to Echelon — works fine for boutique use</td></tr>
+          <tr><td>4 of 8 treadmills</td><td><span class="badge badge-amber">Hybrid</span></td><td class="dim">Buy 4 China mid-tier + 4 Life Fitness/Precor for heavy use</td></tr>
+          <tr><td>Concept2 rowers (2 units)</td><td><span class="badge badge-red">Buy local</span></td><td class="dim">Brand recognition + unmatched reliability — worth the premium</td></tr>
+          <tr><td>Mirrors</td><td><span class="badge badge-red">Buy local</span></td><td class="dim">Safety glass — shipping risk and local install required</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Import logistics</div>
+        <table class="tbl">
+          <tr><td class="dim" style="width:35%">Lead time</td><td>8–14 weeks from order to delivery (sea freight)</td></tr>
+          <tr><td class="dim">Freight cost</td><td>$4,000–6,000 for a full container (FCL) from Guangzhou or Shenzhen</td></tr>
+          <tr><td class="dim">Import duty (Canada)</td><td>~5–8% on gym equipment — factor into landed cost calculation</td></tr>
+          <tr><td class="dim">HST on import</td><td>Applicable but recoverable as input tax credit once HST-registered</td></tr>
+          <tr><td class="dim">Sourcing platforms</td><td>1688.com (wholesale), Alibaba with Trade Assurance, or use a Canadian freight broker</td></tr>
+          <tr><td class="dim">Warranty</td><td>Negotiate 2-year parts warranty in contract — reputable manufacturers offer this</td></tr>
+          <tr><td class="dim">Risk mitigation</td><td>Request sample unit + quality inspection before full order ships. Use Trade Assurance for payment protection.</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════ P&L ═══════ -->
+    <div id="pnl" class="tab">
+      <div class="page-title">P&L forecast — 3 years</div>
+      <div class="page-sub">Year 1 is a ramp-up loss covered by working capital. Profitability expected mid-Year 2.</div>
+
+      <div class="chart-wrap">
+        <canvas id="pnlChart" role="img" aria-label="Bar chart showing EBITDA by quarter. Q1 through Q4 Year 1: losses of $52k, $18k, then profit $14k, $38k. Year 2: $118k profit. Year 3: $198k profit.">EBITDA: Q1 -$52k, Q2 -$18k, Q3 +$14k, Q4 +$38k, Year 2 +$118k, Year 3 +$198k</canvas>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Revenue forecast</div>
+        <table class="tbl">
+          <tr><th>Stream</th><th class="num">Q1</th><th class="num">Q2</th><th class="num">Q3</th><th class="num">Q4</th><th class="num">Year 1</th><th class="num">Year 2</th><th class="num">Year 3</th></tr>
+          <tr><td>Memberships</td><td class="num">$13,500</td><td class="num">$31,050</td><td class="num">$51,295</td><td class="num">$71,542</td><td class="num">$167,387</td><td class="num">$340,164</td><td class="num">$404,955</td></tr>
+          <tr><td>Drop-ins</td><td class="num">$1,800</td><td class="num">$3,500</td><td class="num">$5,500</td><td class="num">$7,200</td><td class="num">$18,000</td><td class="num">$32,000</td><td class="num">$38,000</td></tr>
+          <tr><td>PT room rental (×2 external)</td><td class="num">$1,600</td><td class="num">$4,800</td><td class="num">$4,800</td><td class="num">$4,800</td><td class="num">$16,000</td><td class="num">$19,200</td><td class="num">$19,200</td></tr>
+          <tr><td>Food bar (daytime staffed)</td><td class="num">$10,500</td><td class="num">$16,800</td><td class="num">$23,100</td><td class="num">$27,300</td><td class="num">$77,700</td><td class="num">$95,550</td><td class="num">$110,250</td></tr>
+          <tr><td>Smart fridge + vending</td><td class="num">$1,200</td><td class="num">$2,400</td><td class="num">$3,600</td><td class="num">$4,200</td><td class="num">$11,400</td><td class="num">$14,400</td><td class="num">$16,800</td></tr>
+          <tr class="total"><td>Total revenue</td><td class="num">$28,600</td><td class="num">$58,550</td><td class="num">$88,295</td><td class="num">$115,042</td><td class="num">$290,487</td><td class="num">$501,314</td><td class="num">$589,205</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Monthly cost structure (stabilized)</div>
+        <table class="tbl">
+          <tr><th>Expense</th><th class="num">Monthly</th><th class="num">Annual</th><th>Notes</th></tr>
+          <tr><td>Rent + TMI (7,000 sqft)</td><td class="num">$13,417</td><td class="num">$161,000</td><td class="dim">$23/sqft gross — Markham avg</td></tr>
+          <tr><td>Part-time GM</td><td class="num">$3,500</td><td class="num">$42,000</td><td class="dim">~25 hrs/wk @ $27/hr</td></tr>
+          <tr><td>Food bar staff (daytime)</td><td class="num">$4,500</td><td class="num">$54,000</td><td class="dim">2 part-time kitchen + service</td></tr>
+          <tr><td>Cleaning contract</td><td class="num">$2,000</td><td class="num">$24,000</td><td class="dim">Daily + deep weekly</td></tr>
+          <tr><td>Utilities (24/7 ops)</td><td class="num">$2,500</td><td class="num">$30,000</td><td class="dim">Higher than traditional gym</td></tr>
+          <tr><td>Insurance (unattended facility)</td><td class="num">$1,500</td><td class="num">$18,000</td><td class="dim">Enhanced liability required</td></tr>
+          <tr><td>Tech + access control</td><td class="num">$900</td><td class="num">$10,800</td><td class="dim">App, booking, biometric, cameras</td></tr>
+          <tr><td>Marketing (steady state)</td><td class="num">$1,000</td><td class="num">$12,000</td><td class="dim">Social, referrals, Google</td></tr>
+          <tr><td>Repairs + maintenance</td><td class="num">$833</td><td class="num">$10,000</td><td class="dim">Equipment wear + facilities</td></tr>
+          <tr><td>Supplies + food COGS</td><td class="num">$1,000</td><td class="num">$12,000</td><td class="dim">~35% food COGS + cleaning</td></tr>
+          <tr><td>Accounting + legal + bank fees</td><td class="num">$950</td><td class="num">$11,400</td><td class="dim"></td></tr>
+          <tr class="total"><td>Total</td><td class="num">$32,100</td><td class="num">$385,200</td><td></td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">EBITDA summary</div>
+        <table class="tbl">
+          <tr><th></th><th class="num">Year 1</th><th class="num">Year 2</th><th class="num">Year 3</th></tr>
+          <tr><td>Total revenue</td><td class="num">$290,487</td><td class="num">$501,314</td><td class="num">$589,205</td></tr>
+          <tr><td>Food COGS (35%)</td><td class="num">($30,975)</td><td class="num">($38,483)</td><td class="num">($44,548)</td></tr>
+          <tr><td>Operating expenses</td><td class="num">($384,000)</td><td class="num">($344,400)</td><td class="num">($347,000)</td></tr>
+          <tr class="total"><td>EBITDA</td><td class="num" style="color:var(--red)">($124,488)</td><td class="num" style="color:var(--green)">$118,431</td><td class="num" style="color:var(--green)">$197,657</td></tr>
+          <tr><td>EBITDA margin</td><td class="num" style="color:var(--red)">−43%</td><td class="num" style="color:var(--green)">24%</td><td class="num" style="color:var(--green)">34%</td></tr>
+        </table>
+        <p style="font-size:12px;color:var(--text3);margin-top:12px">Year 1 loss is covered by the $70k working capital reserve. Partners should not expect distributions for the first 18–24 months.</p>
+      </div>
+    </div>
+
+    <!-- ═══════ BREAK-EVEN ═══════ -->
+    <div id="breakeven" class="tab">
+      <div class="page-title">Break-even calculator</div>
+      <div class="page-sub">Adjust inputs to model different scenarios. All numbers update instantly.</div>
+
+      <div class="card">
+        <div class="slider-row">
+          <label>Membership fee ($/month)</label>
+          <input type="range" id="memFee" min="60" max="150" value="90" step="1" oninput="calcBE()">
+          <div class="slider-val" id="memFeeVal">$90</div>
+        </div>
+        <div class="slider-row">
+          <label>Fixed monthly costs ($)</label>
+          <input type="range" id="fixedCost" min="20000" max="50000" value="32100" step="100" oninput="calcBE()">
+          <div class="slider-val" id="fixedCostVal">$32,100</div>
+        </div>
+        <div class="slider-row">
+          <label>Other monthly revenue ($)</label>
+          <input type="range" id="nonMem" min="2000" max="20000" value="10590" step="100" oninput="calcBE()">
+          <div class="slider-val" id="nonMemVal">$10,590</div>
+        </div>
+        <div class="slider-row">
+          <label>Membership cap</label>
+          <input type="range" id="memCap" min="100" max="700" value="500" step="10" oninput="calcBE()">
+          <div class="slider-val" id="memCapVal">500</div>
+        </div>
+      </div>
+
+      <div class="be-result">
+        <div class="be-big" id="beNum">210</div>
+        <div class="be-lbl">members needed to break even</div>
+        <div class="be-detail" id="beDetail">With 500 member cap, you have 290 members of headroom above break-even.</div>
+        <div style="font-size:13px;margin-top:12px" id="beStatus"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Scenario table</div>
+        <table class="tbl">
+          <thead><tr><th>Members</th><th class="num">Membership rev</th><th class="num">Other rev</th><th class="num">Total rev</th><th class="num">Fixed costs</th><th class="num">Net profit</th><th>Status</th></tr></thead>
+          <tbody id="scenarioBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════ FLOOR PLAN ═══════ -->
+    <div id="floorplan" class="tab">
+      <div class="page-title">Space blueprint — 7,000 sq ft</div>
+      <div class="page-sub">Illustrative layout. Each block = approx 5 × 5 ft. Grid: 100 ft wide × 70 ft deep.</div>
+
+      <div class="fp-grid" id="fpGrid"></div>
+
+      <div class="legend-grid" id="fpLegend" style="margin-bottom:24px"></div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Space allocation</div>
+          <table class="tbl">
+            <tr><td>Cardio zone</td><td class="num">2,000 sqft</td></tr>
+            <tr><td>Free weights</td><td class="num">1,800 sqft</td></tr>
+            <tr><td>Machines</td><td class="num">1,000 sqft</td></tr>
+            <tr><td>PT studios (×3)</td><td class="num">600 sqft</td></tr>
+            <tr><td>Food + smoothie bar</td><td class="num">700 sqft</td></tr>
+            <tr><td>Changerooms</td><td class="num">500 sqft</td></tr>
+            <tr><td>Lobby + reception</td><td class="num">200 sqft</td></tr>
+            <tr><td>Functional + stretch</td><td class="num">200 sqft</td></tr>
+            <tr class="total"><td>Total</td><td class="num">7,000 sqft</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">Equipment placement</div>
+          <table class="tbl">
+            <tr><td class="dim">Cardio</td><td style="font-size:12.5px">Treadmills along window wall. Bikes + rowers centre. 3 ft safety clearance between units.</td></tr>
+            <tr><td class="dim">Free weights</td><td style="font-size:12.5px">Racks along back wall with full mirror coverage. Dumbbells on tiered racks. Olympic platforms floored separately.</td></tr>
+            <tr><td class="dim">PT studios</td><td style="font-size:12.5px">3 × 200 sqft rooms. Each has: cable unit, adjustable bench, mirror wall. App-only booking.</td></tr>
+            <tr><td class="dim">Food bar</td><td style="font-size:12.5px">Faces lobby — visible from entry. Smart fridge visible for off-hours access. Counter + 6-seat bar.</td></tr>
+            <tr><td class="dim">Entry</td><td style="font-size:12.5px">Biometric scanner at front door + secondary door. AED mounted at reception. Camera coverage throughout.</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ PARTNERS ═══════ -->
+    <div id="partners" class="tab">
+      <div class="page-title">Partnership structure</div>
+      <div class="page-sub">Equal equity split across 5 founders. CFO and head trainer roles carry operational authority.</div>
+
+      <div class="card">
+        <div class="card-title">Capital table</div>
+        <table class="tbl">
+          <tr><th>Partner</th><th>Role</th><th class="num">Capital in</th><th class="num">Equity</th><th>Notes</th></tr>
+          <tr><td>Partner 1</td><td>CFO / Finance</td><td class="num">$83,960</td><td class="num">20%</td><td class="dim">Books, tax, reporting, investor comms</td></tr>
+          <tr><td>Partner 2 (PT)</td><td>Head of Training</td><td class="num">$83,960</td><td class="num">20%</td><td class="dim">Client base = revenue on Day 1</td></tr>
+          <tr><td>Partner 3</td><td>Operations</td><td class="num">$83,960</td><td class="num">20%</td><td class="dim">Day-to-day ops, staffing, vendors</td></tr>
+          <tr><td>Partner 4</td><td>Marketing / Sales</td><td class="num">$83,960</td><td class="num">20%</td><td class="dim">Member acquisition, social, brand</td></tr>
+          <tr><td>Partner 5</td><td>Capital partner</td><td class="num">$83,960</td><td class="num">20%</td><td class="dim">Investor-style — reduced operational role</td></tr>
+          <tr class="total"><td>Total</td><td></td><td class="num">$419,800</td><td class="num">100%</td><td></td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">PT partner arrangement</div>
+        <table class="tbl">
+          <tr><td class="dim" style="width:35%">Founder status</td><td>PT partner is a founder — does NOT pay room rental fees</td></tr>
+          <tr><td class="dim">Sweat equity value</td><td>Her existing client base is valued at ~$2,400/month in avoided PT room rental</td></tr>
+          <tr><td class="dim">Client revenue</td><td>Her personal training revenue belongs to her — not the gym (must be explicit in partnership agreement)</td></tr>
+          <tr><td class="dim">External PTs</td><td>2 additional trainers rent studio space at $800/month each = $1,600/month gym revenue</td></tr>
+          <tr><td class="dim">Studio booking</td><td>Founder PT has priority booking. External trainers on app-based scheduling.</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Required partnership agreement clauses</div>
+        <table class="tbl">
+          <tr><td style="width:35%;color:var(--amber)">Buy-sell agreement</td><td class="dim">Right of first refusal at fair value — defines what happens when a partner exits</td></tr>
+          <tr><td style="color:var(--amber)">Vesting schedule</td><td class="dim">3-year equity vesting — prevents a partner leaving after 6 months with 20%</td></tr>
+          <tr><td style="color:var(--amber)">Salary vs. distribution</td><td class="dim">Agree upfront — prevents disputes in Year 1 when cash is tight</td></tr>
+          <tr><td style="color:var(--amber)">Decision authority</td><td class="dim">What requires majority vs. unanimous vote (hiring, capex, new debt, equity changes)</td></tr>
+          <tr><td style="color:var(--amber)">Non-compete</td><td class="dim">5km radius, 2 years post-exit — protects the business and members</td></tr>
+          <tr><td style="color:var(--amber)">Capital calls</td><td class="dim">Are partners obligated to contribute if more capital is needed? Define the mechanism.</td></tr>
+          <tr><td style="color:var(--amber)">Dissolution</td><td class="dim">Clear process for winding down — who gets paid first, asset liquidation order</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════ DEPLOY GUIDE ═══════ -->
+    <div id="deploy" class="tab">
+      <div class="page-title">Deploy guide — get a live URL</div>
+      <div class="page-sub">Three ways to host this model publicly. Netlify is fastest — under 2 minutes, free forever.</div>
+
+      <div class="slabel">Option A — Netlify Drop (fastest, free)</div>
+      <div class="deploy-box">
+        <div class="deploy-step">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <strong>Download this file</strong>
+            <p>Save this page as <code>index.html</code> from your browser (File → Save Page As → Webpage, HTML Only)</p>
+          </div>
+        </div>
+        <div class="deploy-step">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <strong>Go to drop.netlify.com</strong>
+            <p>Open <code>drop.netlify.com</code> in a new tab — no account needed</p>
+          </div>
+        </div>
+        <div class="deploy-step">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <strong>Drag your file in</strong>
+            <p>Drag the <code>index.html</code> file into the Netlify drop zone. It deploys in ~10 seconds.</p>
+          </div>
+        </div>
+        <div class="deploy-step" style="margin-bottom:0">
+          <div class="step-num">4</div>
+          <div class="step-text">
+            <strong>Share your URL</strong>
+            <p>Netlify gives you a URL like <code>random-name-abc123.netlify.app</code>. You can rename it to <code>markhamgymco.netlify.app</code> for free in settings.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slabel">Option B — GitHub Pages (version controlled)</div>
+      <div class="deploy-box">
+        <div class="deploy-step">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <strong>Create a free GitHub account</strong>
+            <p>Go to <code>github.com</code> and sign up</p>
+          </div>
+        </div>
+        <div class="deploy-step">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <strong>Create a new repository</strong>
+            <p>Name it <code>gym-model</code> — set it to Public</p>
+          </div>
+        </div>
+        <div class="deploy-step">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <strong>Upload index.html</strong>
+            <p>Click "Add file → Upload files" and drag in your saved <code>index.html</code></p>
+          </div>
+        </div>
+        <div class="deploy-step" style="margin-bottom:0">
+          <div class="step-num">4</div>
+          <div class="step-text">
+            <strong>Enable GitHub Pages</strong>
+            <p>Settings → Pages → Source: Deploy from branch → main. Your URL: <code>yourusername.github.io/gym-model</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slabel">Option C — Custom domain (most professional)</div>
+      <div class="deploy-box">
+        <div class="deploy-step" style="margin-bottom:0">
+          <div class="step-num">→</div>
+          <div class="step-text">
+            <strong>Buy a domain + connect to Netlify</strong>
+            <p>Buy <code>markhamgymco.com</code> on Namecheap (~$12/yr). In Netlify → Domain settings → Add custom domain. Point your nameservers to Netlify. Done. You'll have <code>markhamgymco.com</code> live in under an hour, free hosting.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <div class="card-title">Sharing with partners</div>
+        <table class="tbl">
+          <tr><td class="dim" style="width:35%">Password protection</td><td>Netlify offers free password protection — go to Site settings → Access control → Basic auth. Add a shared password before sharing with partners.</td></tr>
+          <tr><td class="dim">Updating the model</td><td>To update numbers, edit the <code>index.html</code> file and re-upload. Netlify + GitHub both support drag-and-drop updates.</td></tr>
+          <tr><td class="dim">Exporting to PDF</td><td>Open the live URL → File → Print → Save as PDF. Each tab will need to be open to capture — print page by page.</td></tr>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item, .mobile-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll(`[onclick="showTab('${id}',this)"]`).forEach(b => b.classList.add('active'));
+  if (id === 'pnl' && !window.pnlDone) renderPnl();
+  if (id === 'floorplan' && !window.fpDone) buildFloorPlan();
+}
+
+const fmt = n => new Intl.NumberFormat('en-CA', {style:'currency',currency:'CAD',maximumFractionDigits:0}).format(n);
+const fmtN = n => Math.round(n).toLocaleString();
+
+function calcBE() {
+  const fee = +document.getElementById('memFee').value;
+  const fixed = +document.getElementById('fixedCost').value;
+  const nonMem = +document.getElementById('nonMem').value;
+  const cap = +document.getElementById('memCap').value;
+  document.getElementById('memFeeVal').textContent = fmt(fee);
+  document.getElementById('fixedCostVal').textContent = fmt(fixed);
+  document.getElementById('nonMemVal').textContent = fmt(nonMem);
+  document.getElementById('memCapVal').textContent = fmtN(cap);
+  const needed = Math.ceil((fixed - nonMem) / fee);
+  document.getElementById('beNum').textContent = fmtN(needed);
+  const headroom = cap - needed;
+  document.getElementById('beDetail').textContent = `With ${fmtN(cap)} member cap, you have ${fmtN(Math.max(0,headroom))} members of headroom above break-even.`;
+  const pct = Math.round(needed / cap * 100);
+  const statusEl = document.getElementById('beStatus');
+  if (needed >= cap) { statusEl.textContent = 'Warning: break-even exceeds membership cap at current inputs.'; statusEl.style.color = 'var(--red)'; }
+  else if (pct < 50) { statusEl.textContent = `Strong model — break-even is ${pct}% of capacity.`; statusEl.style.color = 'var(--green)'; }
+  else { statusEl.textContent = `Break-even is ${pct}% of capacity — watch your cost structure.`; statusEl.style.color = 'var(--amber)'; }
+  const tbody = document.getElementById('scenarioBody');
+  tbody.innerHTML = '';
+  [50,100,150,200,250,300,400,500].forEach(m => {
+    const memR = m * fee, tot = memR + nonMem, net = tot - fixed;
+    const tr = document.createElement('tr');
+    const rowBg = net >= 0 ? 'rgba(74,222,128,0.05)' : 'rgba(248,113,113,0.05)';
+    tr.style.background = rowBg;
+    tr.innerHTML = `<td>${fmtN(m)}</td><td class="num">${fmt(memR)}</td><td class="num">${fmt(nonMem)}</td><td class="num">${fmt(tot)}</td><td class="num">${fmt(fixed)}</td><td class="num" style="color:${net>=0?'var(--green)':'var(--red)'}">${fmt(net)}</td><td><span class="badge ${net>=0?'badge-green':'badge-red'}">${net>=0?'profitable':'loss'}</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderPnl() {
+  window.pnlDone = true;
+  const isDark = true;
+  const ctx = document.getElementById('pnlChart').getContext('2d');
+  const labels = ['Q1 Y1','Q2 Y1','Q3 Y1','Q4 Y1','Year 2','Year 3'];
+  const data = [-52000,-18000,14000,38000,118000,198000];
+  const colors = data.map(v => v >= 0 ? '#4ade80' : '#f87171');
+  new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => { const v = c.parsed.y; return (v<0?'-':'') + fmt(Math.abs(v)); } } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#5a5a6a', font: { size: 12 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#5a5a6a', font: { size: 11 }, callback: v => (v<0?'-':'') + '$' + Math.abs(Math.round(v/1000)) + 'k' } }
+      }
+    }
+  });
+}
+
+function buildFloorPlan() {
+  window.fpDone = true;
+  const ROWS = 14, COLS = 20;
+  const zones = {
+    ENT: { label:'Lobby', color:'#1e3a4a', tc:'#60a5fa' },
+    REC: { label:'Reception', color:'#1a3560', tc:'#93c5fd' },
+    CHM: { label:'Changerooms', color:'#1a3a1a', tc:'#4ade80' },
+    STO: { label:'Storage', color:'#252525', tc:'#6b6b6b' },
+    WAS: { label:'Washrooms', color:'#1f2a1f', tc:'#86efac' },
+    CAR: { label:'Cardio', color:'#3a3000', tc:'#fbbf24' },
+    MAC: { label:'Machines', color:'#3a2000', tc:'#f97316' },
+    FRE: { label:'Free weights', color:'#3a1a00', tc:'#fb923c' },
+    FNC: { label:'Functional', color:'#3a0a0a', tc:'#f87171' },
+    PT1: { label:'PT studios', color:'#0a2a3a', tc:'#7dd3fc' },
+    BAR: { label:'Food bar', color:'#0a2a1a', tc:'#86efac' },
+    STR: { label:'Stretch', color:'#200a3a', tc:'#c4b5fd' },
+  };
+  const labelMap = {'0,3':'LOBBY','0,9':'RECEPTION','3,1':'CHANGEROOM','3,10':'CHANGEROOM','3,5':'STORAGE','6,3':'CARDIO','6,14':'MACHINES','10,3':'FREE WEIGHTS','10,11':'FUNCTIONAL','10,17':'PT STUDIOS','12,4':'FOOD BAR','12,15':'STRETCH'};
+  const grid = document.getElementById('fpGrid');
+  grid.style.gridTemplateColumns = `repeat(${COLS},1fr)`;
+  for (let r=0; r<ROWS; r++) {
+    for (let c=0; c<COLS; c++) {
+      let z;
+      if(r<2){z=(c>=8&&c<=11)?'REC':'ENT';}
+      else if(r<5){z=c<5?'CHM':c<7?'STO':c<9?'WAS':c<16?'CHM':'WAS';}
+      else if(r<9){z=c<10?'CAR':'MAC';}
+      else if(r<12){z=c<9?'FRE':c<14?'FNC':'PT1';}
+      else{z=c<12?'BAR':'STR';}
+      const zd = zones[z];
+      const div = document.createElement('div');
+      div.className = 'fp-cell';
+      div.style.background = zd.color;
+      div.style.color = zd.tc;
+      const lbl = labelMap[r+','+c];
+      if(lbl) div.textContent = lbl;
+      grid.appendChild(div);
+    }
+  }
+  const leg = document.getElementById('fpLegend');
+  Object.values(zones).forEach(z => {
+    const span = document.createElement('div');
+    span.className = 'legend-item';
+    span.innerHTML = `<div class="legend-dot" style="background:${z.color};border:1px solid rgba(255,255,255,0.1)"></div>${z.label}`;
+    leg.appendChild(span);
+  });
+}
+
+calcBE();
+</script>
+</body>
+</html>
